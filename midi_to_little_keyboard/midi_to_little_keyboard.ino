@@ -3,6 +3,9 @@
 
 #include <MIDI.h>
 
+#include <FastLED.h>
+CRGB leds[1];
+
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 int note[] = {-1,-1};
@@ -13,6 +16,8 @@ long delayT = 1000;
 
 int midiOffset = 41;//the midi note which the lowest key corresponds to
 
+bool ledon= true;
+
 
 void setup() {
   for (int scan = 10; scan >= 3; scan--) {
@@ -21,7 +26,13 @@ void setup() {
   MIDI.setHandleNoteOn(handleNoteOn);
   MIDI.setHandleNoteOff(handleNoteOff);
   MIDI.begin(MIDI_CHANNEL_OMNI);
+
+  
   Serial.begin(115200);
+
+   FastLED.addLeds<WS2812B,13,GRB>(leds, 1).setCorrection(TypicalLEDStrip);
+   FastLED.setBrightness(100);
+ 
   timer = millis() + delayT;
 }
 
@@ -30,16 +41,20 @@ void loop() {
 
   if (timer < millis()) {
     timer = millis() + delayT;
-    digitalWrite2(13, !digitalRead2(13));
+    if (ledon)    leds[0] = CRGB::Purple;
+    else leds[0] = CRGB::Black;
+    FastLED.show(); 
+    ledon=!ledon;
+    //digitalWrite2(13, !digitalRead2(13));
   }
 
   for (int scan = 0; scan < 8; scan++) {//30==14 , 23==21
     if (digitalRead2(scan + 14)) {
       for (int read = 0; read <= 8; read++) {//11=3 , 18=10
         if (read + scan  * 8  == note[0]  || read + scan  * 8 == note[1] ) {
-          digitalWrite2(read + 3, HIGH);
+          digitalWrite2(read + 4, HIGH);
         }
-        else pinMode2(read + 3, INPUT);
+        else pinMode2(read + 4, INPUT);
       }
     }
   }
